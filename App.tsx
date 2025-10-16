@@ -19,7 +19,7 @@ function RootStack() {
         backgroundColor={colors.bg}
       />
       <Stack.Navigator
-        initialRouteName="home"
+        initialRouteName="one"
         screenOptions={{
           headerShown: false,
           animation: "slide_from_right",
