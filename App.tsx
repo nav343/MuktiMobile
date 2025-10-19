@@ -10,6 +10,7 @@ import NewChat from "./pages/NewChat";
 import Notifications from "./pages/Notifications";
 import Reminders from "./pages/Reminders";
 import Tasks from "./pages/Tasks";
+import CreateTasks from "./pages/CreateTasks";
 
 const Stack = createNativeStackNavigator();
 function RootStack() {
@@ -21,7 +22,7 @@ function RootStack() {
         backgroundColor={colors.bg}
       />
       <Stack.Navigator
-        initialRouteName="tasks"
+        initialRouteName="home"
         screenOptions={{
           headerShown: false,
           animation: "slide_from_right",
@@ -75,6 +76,12 @@ function RootStack() {
 
         <Stack.Screen name="tasks">
           {() => <Tasks theme={theme} setTheme={setTheme} colors={colors} />}
+        </Stack.Screen>
+
+        <Stack.Screen name="createTask">
+          {() => (
+            <CreateTasks theme={theme} setTheme={setTheme} colors={colors} />
+          )}
         </Stack.Screen>
       </Stack.Navigator>
     </>

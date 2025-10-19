@@ -10,7 +10,7 @@ import {
 } from "lucide-react-native";
 import { ParamListBase, useNavigation } from "@react-navigation/native";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 interface TaskData {
   title: string;
@@ -40,7 +40,21 @@ export default function Tasks(props: Theme) {
     setLastDeleted(prev.splice(taskId, 1)[0]);
     return prev;
   }
-
+  /**
+  useEffect(() => {
+    Alert.alert("Last Chance", "Task Deleted. Do you want to redo?", [
+      {
+        text: "No",
+        onPress: () => console.log("He choose not to save it dam"),
+        style: "cancel",
+      },
+      {
+        text: "Yes",
+        onPress: () => setTasks((prev) => [...prev, lastDeleted]),
+      },
+    ]);
+  }, [lastDeleted]);
+  **/
   const [tasks, setTasks] = useState<TaskData[]>([
     {
       title: "Task 1",
@@ -110,7 +124,9 @@ export default function Tasks(props: Theme) {
             Tasks
           </Text>
         </View>
-        <View
+        <TouchableOpacity
+          activeOpacity={0.7}
+          onPress={() => navigation.navigate("createTask")}
           style={{
             padding: 10,
             borderWidth: 2,
@@ -120,7 +136,7 @@ export default function Tasks(props: Theme) {
           }}
         >
           <Plus color={colors.text} width={24} height={24} />
-        </View>
+        </TouchableOpacity>
       </View>
 
       {tasks.length != 0 ? (
@@ -213,17 +229,6 @@ export default function Tasks(props: Theme) {
           onPress={() => {
             setSelectedId(-1);
             setTasks(deleteTask(tasks, selectedId));
-            Alert.alert("Last Chance", "Task Deleted. Do you want to redo?", [
-              {
-                text: "No",
-                onPress: () => console.log("He choose not to save it dam"),
-                style: "cancel",
-              },
-              {
-                text: "Yes",
-                onPress: () => setTasks((prev) => [...prev, lastDeleted]),
-              },
-            ]);
           }}
           style={{
             position: "absolute",
