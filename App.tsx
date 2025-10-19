@@ -8,6 +8,8 @@ import Login from "./pages/Login";
 import Signup from "./pages/Signup";
 import NewChat from "./pages/NewChat";
 import Notifications from "./pages/Notifications";
+import Reminders from "./pages/Reminders";
+import Tasks from "./pages/Tasks";
 
 const Stack = createNativeStackNavigator();
 function RootStack() {
@@ -19,7 +21,7 @@ function RootStack() {
         backgroundColor={colors.bg}
       />
       <Stack.Navigator
-        initialRouteName="one"
+        initialRouteName="tasks"
         screenOptions={{
           headerShown: false,
           animation: "slide_from_right",
@@ -63,6 +65,16 @@ function RootStack() {
 
         <Stack.Screen name="chat">
           {() => <NewChat theme={theme} setTheme={setTheme} colors={colors} />}
+        </Stack.Screen>
+
+        <Stack.Screen name="reminders">
+          {() => (
+            <Reminders theme={theme} setTheme={setTheme} colors={colors} />
+          )}
+        </Stack.Screen>
+
+        <Stack.Screen name="tasks">
+          {() => <Tasks theme={theme} setTheme={setTheme} colors={colors} />}
         </Stack.Screen>
       </Stack.Navigator>
     </>

@@ -213,6 +213,7 @@ export default function Dashboard(props: Theme) {
               )}
             </TouchableOpacity>
             <TouchableOpacity
+              onPress={() => navigation.navigate("reminders")}
               style={{
                 padding: 10,
                 borderWidth: 2,
@@ -259,6 +260,24 @@ export default function Dashboard(props: Theme) {
             >
               <Text style={{ fontWeight: 400 }}>4/7 </Text>Tasks completed
             </Text>
+            <TouchableOpacity
+              activeOpacity={0.7}
+              onPress={() => navigation.navigate("tasks")}
+              style={{
+                paddingHorizontal: 30,
+                paddingVertical: 10,
+                backgroundColor: colors.bg,
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                borderRadius: 15,
+                marginTop: 10,
+              }}
+            >
+              <Text style={{ color: colors.text, fontSize: 18 }}>
+                Create Task
+              </Text>
+            </TouchableOpacity>
           </View>
 
           <View>
