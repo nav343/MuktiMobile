@@ -1,6 +1,7 @@
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Theme } from "../utils/themes/Theme";
 import {
+  Animated,
   ScrollView,
   Text,
   TextInput,
@@ -13,24 +14,38 @@ import { ArrowLeft } from "lucide-react-native";
 import { useState } from "react";
 import { StatusBar } from "expo-status-bar";
 
+interface TaskColor {
+  color: string;
+  theme: "light" | "dark";
+}
 export default function CreateTasks(props: Theme) {
-  const { colors } = props;
+  const { colors, theme } = props;
   const navigation = useNavigation<NativeStackNavigationProp<ParamListBase>>();
-  const [bg, setBg] = useState<string>(colors.bg as string);
+  const [taskColor, setTaskColor] = useState<TaskColor>({
+    color: colors.bg as string,
+    theme: theme as "light" | "dark",
+  });
   const [name, setName] = useState<string>("");
   const [desc, setDesc] = useState<string>("");
   const [addn, setAddn] = useState<string>("");
 
-  const borderColors = [
-    "#BF092F",
-    "#F25912",
-    "#FEB21A",
-    "#043915",
-    "#B6AE9F",
-    "#9E1C60",
-    "#CD2C58",
-    "#211832",
-    "#09122C",
+  const animatedValue = new Animated.Value(1);
+  Animated.timing(animatedValue, {
+    toValue: 0.8,
+    duration: 500,
+    useNativeDriver: true,
+  }).start();
+
+  const taskColors: TaskColor[] = [
+    { color: "#BF092F", theme: "light" },
+    { color: "#F25912", theme: "light" },
+    { color: "#FEB21A", theme: "light" },
+    { color: "#043915", theme: "dark" },
+    { color: "#B6AE9F", theme: "light" },
+    { color: "#9E1C60", theme: "dark" },
+    { color: "#CD2C58", theme: "light" },
+    { color: "#211832", theme: "dark" },
+    { color: "#09122C", theme: "dark" },
   ];
 
   return (
@@ -46,10 +61,10 @@ export default function CreateTasks(props: Theme) {
       >
         <View
           style={{
-            backgroundColor: bg,
+            backgroundColor: taskColor?.color,
             padding: 30,
-            borderBottomEndRadius: 30,
-            borderBottomStartRadius: 30,
+            borderBottomEndRadius: 40,
+            borderBottomStartRadius: 40,
             height: "60%",
           }}
         >
@@ -72,13 +87,24 @@ export default function CreateTasks(props: Theme) {
                 }}
               >
                 <ArrowLeft
-                  color={colors.text}
+                  color={
+                    taskColor?.theme == "light"
+                      ? colors.text_inverted
+                      : colors.text
+                  }
                   fontSize={24}
                   style={{ marginRight: 10 }}
                   onPress={() => navigation.goBack()}
                 />
                 <Text
-                  style={{ color: colors.text, fontSize: 38, fontWeight: 600 }}
+                  style={{
+                    color:
+                      taskColor?.theme == "light"
+                        ? colors.text_inverted
+                        : colors.text,
+                    fontSize: 38,
+                    fontWeight: 600,
+                  }}
                 >
                   New Task
                 </Text>
@@ -90,16 +116,26 @@ export default function CreateTasks(props: Theme) {
                 onChangeText={(e) => setName(e)}
                 value={name}
                 placeholder="Task Name"
-                placeholderTextColor={"gray"}
+                placeholderTextColor={
+                  taskColor?.theme == "dark"
+                    ? colors.text
+                    : colors.text_inverted
+                }
                 style={{
                   fontSize: 28,
-                  color: colors.text,
                   borderRadius: 10,
-                  borderColor: colors.text,
+                  borderColor:
+                    taskColor?.theme == "dark"
+                      ? colors.text
+                      : colors.text_inverted,
                   borderWidth: 1,
                   paddingHorizontal: 20,
                   paddingVertical: 15,
                   marginVertical: 10,
+                  color:
+                    taskColor?.theme == "dark"
+                      ? colors.text
+                      : colors.text_inverted,
                 }}
               />
             </View>
@@ -109,25 +145,43 @@ export default function CreateTasks(props: Theme) {
               style={{ marginTop: 20 }}
               showsHorizontalScrollIndicator={false}
             >
-              {borderColors.map((c) => (
-                <TouchableOpacity
-                  onPress={() => setBg(c)}
-                  style={{
-                    padding: 20,
-                    borderColor: colors.bg,
-                    borderWidth: 0.5,
-                    borderRadius: 100,
-                    width: 20,
-                    height: 20,
-                    backgroundColor: c,
-                    marginHorizontal: 15,
-                  }}
-                />
+              {taskColors.map((c) => (
+                <Animated.View>
+                  <TouchableOpacity
+                    onPress={() => setTaskColor(c)}
+                    style={{
+                      padding: 20,
+                      borderColor:
+                        taskColor?.theme == "dark"
+                          ? colors.text
+                          : colors.text_inverted,
+                      borderWidth: 0.5,
+                      borderRadius: 100,
+                      width: 20,
+                      height: 20,
+                      backgroundColor: c.color,
+                      marginHorizontal: 15,
+                      transform: [
+                        {
+                          scale: taskColor.color == c.color ? animatedValue : 1,
+                        },
+                      ],
+                    }}
+                  />
+                </Animated.View>
               ))}
             </ScrollView>
 
             <View style={{ marginTop: 30 }}>
-              <Text style={{ fontSize: 18, color: colors.text_inverted }}>
+              <Text
+                style={{
+                  fontSize: 18,
+                  color:
+                    taskColor?.theme == "dark"
+                      ? colors.text
+                      : colors.text_inverted,
+                }}
+              >
                 Description
               </Text>
               <TextInput
@@ -137,20 +191,33 @@ export default function CreateTasks(props: Theme) {
                 value={desc}
                 style={{
                   fontSize: 18,
-                  color: colors.text,
+                  color:
+                    taskColor?.theme == "dark"
+                      ? colors.text
+                      : colors.text_inverted,
                   borderRadius: 10,
-                  borderColor: colors.text,
+                  borderColor:
+                    taskColor?.theme == "dark"
+                      ? colors.text
+                      : colors.text_inverted,
                   borderWidth: 1,
                   paddingHorizontal: 20,
                   paddingVertical: 15,
                   marginVertical: 10,
                 }}
-                placeholderTextColor={"gray"}
+                placeholderTextColor={
+                  taskColor?.theme == "dark"
+                    ? colors.text
+                    : colors.text_inverted
+                }
               />
               <Text
                 style={{
                   fontSize: 18,
-                  color: colors.text_inverted,
+                  color:
+                    taskColor?.theme == "dark"
+                      ? colors.text
+                      : colors.text_inverted,
                   marginTop: 20,
                 }}
               >
@@ -158,7 +225,11 @@ export default function CreateTasks(props: Theme) {
               </Text>
               <TextInput
                 placeholder="Additional Notes"
-                placeholderTextColor={"gray"}
+                placeholderTextColor={
+                  taskColor?.theme == "dark"
+                    ? colors.text
+                    : colors.text_inverted
+                }
                 multiline
                 value={addn}
                 onChangeText={(e) => setAddn(e)}
@@ -166,7 +237,10 @@ export default function CreateTasks(props: Theme) {
                   fontSize: 18,
                   color: colors.text,
                   borderRadius: 10,
-                  borderColor: colors.text,
+                  borderColor:
+                    taskColor?.theme == "dark"
+                      ? colors.text
+                      : colors.text_inverted,
                   borderWidth: 1,
                   paddingHorizontal: 20,
                   paddingVertical: 15,
@@ -194,7 +268,7 @@ export default function CreateTasks(props: Theme) {
           </TouchableOpacity>
         </View>
       </SafeAreaView>
-      <StatusBar backgroundColor={bg} />
+      <StatusBar backgroundColor={taskColor?.color} />
     </>
   );
 }
