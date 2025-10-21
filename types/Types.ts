@@ -33,3 +33,11 @@ export interface SettingItems {
 
 export interface ModalOptions extends SettingItems {}
 export interface GridItems extends SettingItems {}
+
+export interface TaskData {
+  title: string;
+  desc: string;
+  additional?: string;
+  completed?: boolean;
+  color?: string;
+}

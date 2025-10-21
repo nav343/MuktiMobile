@@ -11,8 +11,10 @@ import {
 import { ParamListBase, useNavigation } from "@react-navigation/native";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { ArrowLeft } from "lucide-react-native";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { StatusBar } from "expo-status-bar";
+import { TaskData } from "../types/Types";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 
 interface TaskColor {
   color: string;
@@ -26,8 +28,44 @@ export default function CreateTasks(props: Theme) {
     theme: theme as "light" | "dark",
   });
   const [name, setName] = useState<string>("");
-  const [desc, setDesc] = useState<string>("");
-  const [addn, setAddn] = useState<string>("");
+  const [desc, setDesc] = useState<string>();
+  const [addn, setAddn] = useState<string>();
+  const [tasks, setTasks] = useState<TaskData[]>([]);
+  const [warn, setWarn] = useState<boolean>(false);
+
+  useEffect(() => {
+    const fetchTasks = async () => {
+      try {
+        const storedTasks = await AsyncStorage.getItem("tasks");
+        if (storedTasks !== null) {
+          setTasks(JSON.parse(storedTasks));
+        }
+      } catch (error) {
+        console.error("Error fetching tasks", error);
+      }
+    };
+
+    fetchTasks();
+  }, []);
+
+  const addTask = async () => {
+    try {
+      const updatedTasks: TaskData[] = [
+        ...tasks,
+        {
+          title: name,
+          desc: desc ? desc : "No Description",
+          additional: addn ? addn : "No Additional Note",
+          color: taskColor.color,
+          completed: false,
+        },
+      ];
+      await AsyncStorage.setItem("tasks", JSON.stringify(updatedTasks));
+      navigation.goBack();
+    } catch (error) {
+      console.error("Error adding task", error);
+    }
+  };
 
   const animatedValue = new Animated.Value(1);
   Animated.timing(animatedValue, {
@@ -138,6 +176,21 @@ export default function CreateTasks(props: Theme) {
                       : colors.text_inverted,
                 }}
               />
+              {warn && name.trim().length == 0 ? (
+                <View>
+                  <Text
+                    style={{
+                      fontSize: 18,
+                      color: "red",
+                      fontWeight: 300,
+                    }}
+                  >
+                    *Name is a required field
+                  </Text>
+                </View>
+              ) : (
+                <></>
+              )}
             </View>
 
             <ScrollView
@@ -261,6 +314,13 @@ export default function CreateTasks(props: Theme) {
               marginBottom: 20,
             }}
             activeOpacity={0.7}
+            onPress={
+              name.trim().length != 0
+                ? addTask
+                : () => {
+                    setWarn(true);
+                  }
+            }
           >
             <Text style={{ color: colors.text_inverted, fontSize: 28 }}>
               Create Task

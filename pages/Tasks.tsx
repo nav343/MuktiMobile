@@ -11,15 +11,9 @@ import {
 } from "lucide-react-native";
 import { ParamListBase, useNavigation } from "@react-navigation/native";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
-import { useState } from "react";
-
-interface TaskData {
-  title: string;
-  desc: string;
-  additional?: string;
-  completed: boolean;
-  color?: string;
-}
+import { useEffect, useState } from "react";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import { TaskData } from "../types/Types";
 
 export default function Tasks(props: Theme) {
   const { colors } = props;
@@ -42,7 +36,7 @@ export default function Tasks(props: Theme) {
     setLastDeleted(prev.splice(taskId, 1)[0]);
     return prev;
   }
-  const [tasks, setTasks] = useState<TaskData[]>([
+  /**const [tasks, setTasks] = useState<TaskData[]>([
     {
       title: "Task 1",
       desc: "This is a short description of Task 1",
@@ -73,7 +67,31 @@ export default function Tasks(props: Theme) {
       color: "#FF894F",
     },
   ]);
+  **/
+  const [tasks, setTasks] = useState<TaskData[]>([]);
+  useEffect(() => {
+    const fetchTasks = async () => {
+      try {
+        const storedTasks = await AsyncStorage.getItem("tasks");
+        if (storedTasks !== null) {
+          setTasks(JSON.parse(storedTasks));
+        }
+      } catch (error) {
+        console.error("Error fetching tasks", error);
+      }
+    };
 
+    fetchTasks();
+  }, []);
+
+  const removeTask = async () => {
+    try {
+      await AsyncStorage.setItem("tasks", JSON.stringify(tasks));
+    } catch (error) {
+      console.error("Error adding task", error);
+    }
+    setConfirmation(!confirmation);
+  };
   return (
     <>
       {confirmation == true ? (
@@ -142,23 +160,39 @@ export default function Tasks(props: Theme) {
                   borderColor: colors.bg,
                   borderWidth: 1,
                   borderRadius: 20,
+                  width: "45%",
                 }}
               >
-                <Text style={{ color: colors.text_inverted, fontSize: 18 }}>
+                <Text
+                  style={{
+                    color: colors.text_inverted,
+                    fontSize: 18,
+                    textAlign: "center",
+                  }}
+                >
                   Yes
                 </Text>
               </TouchableOpacity>
               <TouchableOpacity
                 activeOpacity={0.7}
-                onPress={() => setConfirmation(!confirmation)}
+                onPress={removeTask}
                 style={{
                   paddingVertical: 10,
                   paddingHorizontal: 20,
                   backgroundColor: "#DC2525",
                   borderRadius: 20,
+                  width: "45%",
                 }}
               >
-                <Text style={{ color: colors.text, fontSize: 18 }}>No</Text>
+                <Text
+                  style={{
+                    color: colors.text,
+                    fontSize: 18,
+                    textAlign: "center",
+                  }}
+                >
+                  No
+                </Text>
               </TouchableOpacity>
             </View>
           </View>
