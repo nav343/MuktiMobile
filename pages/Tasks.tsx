@@ -1,6 +1,11 @@
-import { SafeAreaView } from "react-native-safe-area-context";
 import { Theme } from "../utils/themes/Theme";
-import { ScrollView, Text, TouchableOpacity, View } from "react-native";
+import {
+  RefreshControl,
+  ScrollView,
+  Text,
+  TouchableOpacity,
+  View,
+} from "react-native";
 import {
   ArrowLeft,
   CircleCheckBig,
@@ -11,14 +16,26 @@ import {
 } from "lucide-react-native";
 import { ParamListBase, useNavigation } from "@react-navigation/native";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { TaskData } from "../types/Types";
 
+const fetchTasks = async (
+  setTasks: React.Dispatch<React.SetStateAction<TaskData[]>>,
+) => {
+  try {
+    const storedTasks = await AsyncStorage.getItem("tasks");
+    if (storedTasks !== null) {
+      setTasks(JSON.parse(storedTasks));
+    }
+  } catch (error) {
+    console.error("Error fetching tasks", error);
+  }
+};
 export default function Tasks(props: Theme) {
   const { colors } = props;
   const navigation = useNavigation<NativeStackNavigationProp<ParamListBase>>();
-  const [selectedId, setSelectedId] = useState<number>(-1);
+  const [selectedId, setSelectedId] = useState<number | number[]>(-1);
   const [confirmation, setConfirmation] = useState<boolean>(false);
   const [lastDeleted, setLastDeleted] = useState<any>();
 
@@ -32,8 +49,15 @@ export default function Tasks(props: Theme) {
     return newTask;
   }
 
-  function deleteTask(prev: TaskData[], taskId: number): TaskData[] {
-    setLastDeleted(prev.splice(taskId, 1)[0]);
+  function deleteTask(prev: TaskData[], taskId: number | number[]): TaskData[] {
+    if (!Array.isArray(taskId)) {
+      setLastDeleted(prev.splice(taskId, 1)[0]);
+    } else {
+      setLastDeleted(prev[taskId[prev.length - 1]]);
+      taskId.map((id) => {
+        prev.splice(id, 1);
+      });
+    }
     return prev;
   }
   /**const [tasks, setTasks] = useState<TaskData[]>([
@@ -70,18 +94,7 @@ export default function Tasks(props: Theme) {
   **/
   const [tasks, setTasks] = useState<TaskData[]>([]);
   useEffect(() => {
-    const fetchTasks = async () => {
-      try {
-        const storedTasks = await AsyncStorage.getItem("tasks");
-        if (storedTasks !== null) {
-          setTasks(JSON.parse(storedTasks));
-        }
-      } catch (error) {
-        console.error("Error fetching tasks", error);
-      }
-    };
-
-    fetchTasks();
+    fetchTasks(setTasks);
   }, []);
 
   const removeTask = async () => {
@@ -92,6 +105,16 @@ export default function Tasks(props: Theme) {
     }
     setConfirmation(!confirmation);
   };
+
+  const [refreshing, setRefreshing] = useState<boolean>(false);
+  const onRefresh = useCallback(() => {
+    setRefreshing(true);
+    setTimeout(() => {
+      fetchTasks(setTasks);
+      console.log("Data refreshed!");
+      setRefreshing(false);
+    }, 500);
+  }, []);
   return (
     <>
       {confirmation == true ? (
@@ -200,13 +223,19 @@ export default function Tasks(props: Theme) {
       ) : (
         <></>
       )}
-      <SafeAreaView
+      <ScrollView
+        refreshControl={
+          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
+        }
         style={{
           flex: 1,
           backgroundColor: colors.bg,
           padding: 30,
+        }}
+        contentContainerStyle={{
           display: "flex",
           alignItems: "center",
+          height: "100%",
         }}
       >
         <View
@@ -255,15 +284,61 @@ export default function Tasks(props: Theme) {
           <ScrollView style={{ width: "100%", paddingVertical: 20 }}>
             {tasks.map((data, id) => (
               <TouchableOpacity
-                onLongPress={() => setSelectedId(id)}
+                onLongPress={() => {
+                  if (
+                    Array.isArray(selectedId)
+                      ? !selectedId.includes(id)
+                      : selectedId != id
+                  ) {
+                    if (Array.isArray(selectedId)) {
+                      setSelectedId([...selectedId, id]);
+                    } else {
+                      setSelectedId([selectedId, id]);
+                    }
+                  } else {
+                    if (Array.isArray(selectedId)) {
+                      setSelectedId(selectedId.splice(id, 1));
+                    } else {
+                      setSelectedId(-1);
+                    }
+                  }
+                  console.log(selectedId);
+                }}
                 key={id}
                 activeOpacity={0.7}
                 onPress={() => {
-                  setTasks(changeState(tasks, id));
-                  setSelectedId(-1);
+                  if (selectedId == -1) {
+                    setTasks(changeState(tasks, id));
+                    setSelectedId(-1);
+                  } else {
+                    if (
+                      Array.isArray(selectedId)
+                        ? !selectedId.includes(id)
+                        : selectedId != id
+                    ) {
+                      if (Array.isArray(selectedId)) {
+                        setSelectedId([...selectedId, id]);
+                      } else {
+                        setSelectedId([selectedId, id]);
+                      }
+                    } else {
+                      if (Array.isArray(selectedId)) {
+                        setSelectedId(selectedId.splice(id, 1));
+                      } else {
+                        setSelectedId(-1);
+                      }
+                    }
+                  }
+                  console.log(selectedId);
                 }}
                 style={{
-                  backgroundColor: selectedId == id ? "#3B9797" : colors.tile,
+                  backgroundColor: (
+                    Array.isArray(selectedId)
+                      ? (selectedId as number[]).includes(id)
+                      : selectedId == id
+                  )
+                    ? "#3B9797"
+                    : colors.tile,
                   width: "100%",
                   padding: 30,
                   borderRadius: 20,
@@ -360,7 +435,7 @@ export default function Tasks(props: Theme) {
         ) : (
           <></>
         )}
-      </SafeAreaView>
+      </ScrollView>
     </>
   );
 }
